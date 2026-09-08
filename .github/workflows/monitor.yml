@@ -1,0 +1,48 @@
+name: e-license monitor
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: "*/5 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests playwright
+          playwright install --with-deps chromium
+
+      - name: Run monitor
+        env:
+          ELICENSE_LOGIN_ID: ${{ secrets.ELICENSE_LOGIN_ID }}
+          ELICENSE_LOGIN_PASSWORD: ${{ secrets.ELICENSE_LOGIN_PASSWORD }}
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+        run: python monitor.py
+
+      - name: Save state
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          if [ -f state.json ]; then
+            git add state.json
+            git diff --cached --quiet || git commit -m "Update monitor state"
+            git push
+          fi
