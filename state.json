@@ -1,10 +1,4 @@
 {
-  "notified": [
-    [
-      "20260921",
-      "20:00",
-      "12"
-    ]
-  ],
-  "check_count": 6
+  "notified": [],
+  "check_count": 7
 }
