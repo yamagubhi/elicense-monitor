@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -43,6 +45,17 @@ jobs:
 
           if [ -f state.json ]; then
             git add state.json
-            git diff --cached --quiet || git commit -m "Update monitor state"
-            git push
+
+            if ! git diff --cached --quiet; then
+              git commit -m "Update monitor state"
+
+              for i in 1 2 3; do
+                git pull --rebase origin main && git push origin main && break
+
+                echo "Push failed. Retry $i/3..."
+                sleep 5
+              done
+            else
+              echo "state.json has not changed."
+            fi
           fi
